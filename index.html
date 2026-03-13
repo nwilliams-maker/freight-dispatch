@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .document-card { background: white; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1); border: 1px solid #e2e8f0; }
+        .document-card { background: white; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1); border: 1px solid #e2e8f0; width: 100%; max-width: 800px; margin: auto; }
         .header-bar { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
         canvas { width: 100%; height: 220px; background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; touch-action: none; cursor: crosshair; }
         .signature-line { position: absolute; bottom: 50px; left: 10%; right: 10%; border-bottom: 2px solid #94a3b8; pointer-events: none; }
@@ -43,6 +43,7 @@
     </div>
 
     <div class="p-8 md:p-12 space-y-10">
+        <input type="hidden" id="stored_dispatch_email">
         
         <div id="dispatcherZone" class="space-y-6 no-print">
             <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-blue-100 pb-3">1. Dispatcher Setup</h3>
@@ -84,8 +85,7 @@
 
         <div id="icZone" class="hidden space-y-8">
             <div id="icReviewZone" class="space-y-8">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-3">Shipment Acknowledgment</h3>
-                
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-3 text-slate-400">Shipment Acknowledgment</h3>
                 <div id="summaryContent" class="space-y-3"></div>
                 
                 <div class="bg-slate-50 border-l-4 border-slate-800 p-6 rounded-r-2xl space-y-4 text-sm leading-relaxed text-slate-700">
@@ -103,7 +103,7 @@
                                 Sign to Acknowledge Receipt
                             </div>
                         </div>
-                        <button onclick="clearSig()" class="no-print text-[10px] font-black text-slate-400 uppercase">Clear Signature</button>
+                        <button onclick="clearSig()" class="no-print text-[10px] font-black text-slate-400 uppercase hover:text-red-500 transition-colors">Clear Signature</button>
                     </div>
                     
                     <div class="space-y-6">
@@ -118,10 +118,10 @@
                 </div>
             </div>
 
-            <div id="successZone" class="hidden text-center py-10 space-y-6">
+            <div id="successZone" class="hidden no-print text-center py-10 space-y-6">
                 <div class="text-6xl">✅</div>
                 <h2 class="text-2xl font-extrabold text-slate-900">Signed & Downloaded</h2>
-                <p class="text-slate-500 max-w-md mx-auto font-medium">Please <strong>attach the PDF</strong> from your downloads to the email that just opened and hit send.</p>
+                <p class="text-slate-500 max-w-md mx-auto">Please <strong>attach the PDF</strong> from your downloads to the email that just opened and hit send.</p>
                 <button onclick="emailBackToDispatch()" class="bg-slate-100 text-slate-600 font-black px-10 py-5 rounded-2xl uppercase text-xs tracking-widest">
                     Manual Return Email
                 </button>
@@ -146,6 +146,7 @@
 
         const params = new URLSearchParams(window.location.search);
         if (params.has('mode')) {
+            document.getElementById('stored_dispatch_email').value = params.get('de') || '';
             document.getElementById('dispatcherZone').classList.add('hidden');
             document.getElementById('icZone').classList.remove('hidden');
             document.getElementById('statusLabel').innerText = "AWAITING SIGNATURE";
@@ -177,7 +178,7 @@
         const link = `${baseUrl}?mode=sign&ic=${encodeURIComponent(document.getElementById('ic_name_input').value)}&wo=${encodeURIComponent(wo)}&kio=${document.getElementById('kio_input').value}&addr=${encodeURIComponent(document.getElementById('addr_input').value)}&de=${encodeURIComponent(d_email)}`;
 
         const subject = encodeURIComponent(`Action Required: Shipment Acknowledgment WO#${wo}`);
-        const body = encodeURIComponent(`Please review and sign for this delivery at the link below:\n\n${link}`);
+        const body = encodeURIComponent(`Please review and sign for this delivery here:\n\n${link}`);
 
         navigator.clipboard.writeText(link);
         window.location.href = `mailto:${ic_email}?subject=${subject}&body=${body}`;
@@ -191,7 +192,7 @@
 
     function finalizeIC() {
         if (signaturePad.isEmpty()) return alert("Signature is required.");
-        const wo = new URLSearchParams(window.location.search).get('wo');
+        const wo = new URLSearchParams(window.location.search).get('wo') || 'SHIPMENT';
         
         html2pdf().set({ margin: 0, filename: `Shipment_Ack_WO_${wo}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 3 }, jsPDF: { unit: 'in', format: 'letter' } })
         .from(document.getElementById('form-content')).save().then(() => {
@@ -203,11 +204,10 @@
 
     function emailBackToDispatch() {
         const p = new URLSearchParams(window.location.search);
-        const de = p.get('de');
-        const wo = p.get('wo');
-        const subject = encodeURIComponent(`SIGNED ACKNOWLEDGMENT: WO#${wo}`);
-        const body = encodeURIComponent(`Attached is the signed shipment acknowledgment for Work Order #${wo}.\n\n(Note: Attach the PDF from your downloads before sending)`);
-        window.location.href = `mailto:${de}?subject=${subject}&body=${body}`;
+        const de = document.getElementById('stored_dispatch_email').value || p.get('de') || 'dispatch@terraboost.com';
+        const wo = p.get('wo') || 'SHIPMENT';
+        
+        window.location.href = `mailto:${de}?subject=SIGNED PDF: WO#${wo}&body=Please attach the signed PDF from your downloads folder before sending.`;
     }
 </script>
 
