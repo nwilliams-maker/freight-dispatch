@@ -15,6 +15,7 @@
         input, select, textarea { border: 1px solid #e2e8f0; border-radius: 8px !important; padding: 10px; font-size: 14px; width: 100%; background: #ffffff; }
         .signature-font { font-family: 'Dancing Script', cursive; font-size: 2.5rem; color: #1e293b; border-bottom: 2px solid #cbd5e1; background: transparent; width: 100%; }
         .override-box { border-left: 4px solid #3b82f6; background-color: #f0f7ff; padding: 1.25rem; border-radius: 0 0.75rem 0.75rem 0; }
+        .highlight-change { background-color: #fefce8; border: 2px dashed #eab308; padding: 15px; border-radius: 8px; margin-top: 15px; }
         .security-stamp { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 30px; }
         @media print { .no-print { display: none !important; } }
     </style>
@@ -22,12 +23,12 @@
 <body class="p-4 md:p-12">
 
     <div id="captureArea" class="max-w-4xl mx-auto form-card bg-white border border-gray-100">
-        <div class="brand-blue p-8 text-white flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14 text-white">TB</div>
+        <div class="brand-blue p-8 text-white flex justify-between items-center text-white">
+            <div class="flex items-center gap-4 text-white">
+                <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14">TB</div>
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight text-white text-white">Freight Shipment Authorization</h1>
-                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80 text-white">Official Logistics & Digital Acknowledgment</p>
+                    <h1 class="text-2xl font-bold leading-tight">Freight Shipment Authorization</h1>
+                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80">Official Logistics & Digital Acknowledgment</p>
                 </div>
             </div>
         </div>
@@ -59,8 +60,13 @@
                         <h3 class="text-sm font-black text-slate-800 uppercase border-b pb-2">Shipment Data Review</h3>
                         <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm text-slate-700">
                             </div>
+
+                        <div id="pdfChangeZone" class="hidden highlight-change">
+                            <label class="text-amber-700 font-extrabold">Requested Delivery Change</label>
+                            <p id="changeText" class="text-slate-800 font-bold uppercase"></p>
+                        </div>
                         
-                        <div class="override-box space-y-4">
+                        <div class="override-box space-y-4 no-print">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" id="addr_override_check" class="h-5 w-5 rounded border-gray-300 text-blue-600 cursor-pointer" onchange="toggleOverride()">
                                 <label for="addr_override_check" class="mb-0 text-blue-800 font-bold text-[11px] cursor-pointer">Request Alternate Delivery Location</label>
@@ -71,7 +77,7 @@
                                     <label>Location Category</label>
                                     <select id="location_type" onchange="updateOverrideUI()">
                                         <option value="">-- Select Category --</option>
-                                        <option value="Storage Unit (Dispatcher approved)">Storage Unit (Dispatcher already approved)</option>
+                                        <option value="Storage Unit (Dispatcher approved)">Storage Unit (Dispatcher approved)</option>
                                         <option value="Pickup">Pickup (Carrier Hub)</option>
                                         <option value="Alternate Site">Different Address than provided</option>
                                     </select>
@@ -121,10 +127,10 @@
                 </div>
             </div>
 
-            <div id="successView" class="hidden text-center py-12 space-y-4">
-                <div class="text-6xl">✅</div>
-                <h2 class="text-2xl font-bold text-slate-800 uppercase">Authorization Recorded</h2>
-                <p class="text-slate-500">Authorization for WO <span id="success_wo" class="font-bold text-blue-600"></span> has been transmitted.</p>
+            <div id="successView" class="hidden text-center py-12 space-y-4 text-slate-800">
+                <div class="text-6xl text-slate-800">✅</div>
+                <h2 class="text-2xl font-bold uppercase text-slate-800">Authorization Recorded</h2>
+                <p class="text-slate-500">Logistics have been notified. Your certified PDF has been generated.</p>
             </div>
         </form>
     </div>
@@ -144,8 +150,18 @@
             document.getElementById('new_addr_div').style.display = (type === "Alternate Site") ? 'block' : 'none';
         }
 
-        // CORRECT MAPPING LOGIC
-        function mapDataToSummary(data) {
+        // IMPROVED DATA MAPPING
+        function runMapping() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // Try URL first, then fall back to input fields (for local testing)
+            const data = {
+                icn: params.get('icn') || document.getElementById('ic_name_setup').value,
+                wo: params.get('wo') || document.getElementById('task_num').value,
+                k: params.get('k') || document.getElementById('kiosks').value,
+                addr: params.get('addr') || document.getElementById('delivery_addr').value
+            };
+
             document.getElementById('summaryZone').innerHTML = `
                 <div class="flex justify-between"><strong>Contractor:</strong> <span class="font-bold">${data.icn || 'N/A'}</span></div>
                 <div class="flex justify-between"><strong>Work Order ID:</strong> <span class="text-blue-600 font-bold">${data.wo || 'N/A'}</span></div>
@@ -157,17 +173,10 @@
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             if (params.get('mode') === 'sign') {
-                document.getElementById('setupFields').remove();
+                document.getElementById('setupFields').classList.add('hidden');
                 document.getElementById('icMode').classList.remove('hidden');
                 document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                
-                // Pull from URL
-                mapDataToSummary({
-                    icn: params.get('icn'),
-                    wo: params.get('wo'),
-                    k: params.get('k'),
-                    addr: params.get('addr')
-                });
+                runMapping();
             }
         };
 
@@ -179,14 +188,19 @@
             const k = document.getElementById('kiosks').value;
             const addr = document.getElementById('delivery_addr').value;
 
-            if (!dEmail || !ice || !wo) return alert("All fields are required.");
+            if (!dEmail || !ice || !wo) return alert("Required configuration missing.");
 
             const baseUrl = window.location.href.split('?')[0];
             const link = `${baseUrl}?mode=sign&icn=${encodeURIComponent(icn)}&wo=${encodeURIComponent(wo)}&k=${encodeURIComponent(k)}&addr=${encodeURIComponent(addr)}&de=${encodeURIComponent(dEmail)}&ice=${encodeURIComponent(ice)}`;
             
             navigator.clipboard.writeText(link);
-            window.location.href = `mailto:${ice}?subject=Authorization Required: WO#${wo}&body=Please review shipment here: ${link}`;
-            alert("Verification Link Copied!");
+            
+            // SUBJECT LINE RESTORED TO "Action Required"
+            const subject = `Action Required: Shipment Authorization WO#${wo}`;
+            const body = `Hi ${icn},\n\nPlease review shipment logistics here: ${link}`;
+            
+            window.location.href = `mailto:${ice}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            alert("Link Copied!");
         }
 
         async function submitAuthorization() {
@@ -197,8 +211,7 @@
             const altText = document.getElementById('alt_address_text').value;
 
             if (!name || name.length < 3 || !consent) return alert("Signature and consent required.");
-            if (overrideActive && locType === "Alternate Site" && !altText) return alert("Alternate address required.");
-
+            
             const btn = document.getElementById('submitBtn');
             btn.disabled = true; btn.innerText = "Securing Certificate...";
 
@@ -206,27 +219,24 @@
             const ts = new Date().toISOString();
             const txID = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-            // Populate Final PDF View
+            if(overrideActive) {
+                document.getElementById('pdfChangeZone').classList.remove('hidden');
+                document.getElementById('changeText').innerText = locType === "Alternate Site" ? altText : locType;
+            }
+
             document.getElementById('auditTrail').classList.remove('hidden');
             document.getElementById('audit_id').innerText = `ID: ${txID}`;
             document.getElementById('audit_ts').innerText = `TS: ${ts}`;
             document.getElementById('audit_ua').innerText = `ENV: ${navigator.userAgent.substring(0, 50)}...`;
 
-            if(overrideActive) {
-                document.getElementById('summaryZone').innerHTML += `
-                    <div class="pt-2 border-t mt-2 text-blue-700 font-bold">
-                        <strong>Requested Delivery Change:</strong><br>
-                        <span class="text-sm uppercase">${locType === "Alternate Site" ? altText : locType}</span>
-                    </div>
-                `;
-            }
+            // Ensure mapping is current for PDF capture
+            runMapping();
 
             const formData = new FormData();
             formData.append('Work Order', params.get('wo') || document.getElementById('task_num').value);
-            formData.append('Contractor', params.get('icn') || document.getElementById('ic_name_setup').value);
             formData.append('Signatory', name);
-            formData.append('Primary Address', params.get('addr') || document.getElementById('delivery_addr').value);
-            formData.append('Final Destination', overrideActive ? (locType === "Alternate Site" ? altText : locType) : 'Primary');
+            formData.append('Change Requested', overrideActive ? 'YES' : 'NO');
+            formData.append('Final Location', overrideActive ? (locType === "Alternate Site" ? altText : locType) : 'Primary');
             formData.append('Verification ID', txID);
             formData.append('_replyto', params.get('de') || document.getElementById('d_email').value);
 
@@ -236,8 +246,7 @@
                 });
 
                 if (response.ok) {
-                    document.getElementById('success_wo').innerText = params.get('wo') || document.getElementById('task_num').value;
-                    html2pdf().set({ margin: 0.5, filename: `SHIPMENT_AUTH_WO_${params.get('wo') || '0000'}.pdf`, jsPDF: { format: 'letter' } })
+                    html2pdf().set({ margin: 0.5, filename: `AUTH_WO_${params.get('wo') || '0000'}.pdf`, jsPDF: { format: 'letter' } })
                     .from(document.getElementById('captureArea')).save();
                     document.getElementById('icMode').style.display = 'none';
                     document.getElementById('successView').classList.remove('hidden');
