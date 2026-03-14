@@ -13,10 +13,9 @@
         .form-card { border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
         label { color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.65rem; display: block; margin-bottom: 4px; }
         input, select, textarea { border: 1px solid #e2e8f0; border-radius: 8px !important; padding: 10px; font-size: 14px; width: 100%; background: #ffffff; }
-        input:focus, select:focus, textarea:focus { border-color: #3b82f6; outline: none; ring: 2px; ring-color: #3b82f6; }
         .signature-font { font-family: 'Dancing Script', cursive; font-size: 2.5rem; color: #1e293b; border-bottom: 2px solid #cbd5e1; background: transparent; width: 100%; }
-        .override-box { border-left: 4px solid #3b82f6; background-color: #f0f7ff; }
-        .error-border { border-color: #ef4444 !important; }
+        .override-box { border-left: 4px solid #3b82f6; background-color: #f0f7ff; padding: 1.25rem; border-radius: 0 0.75rem 0.75rem 0; }
+        .security-stamp { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 30px; }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
@@ -28,7 +27,7 @@
                 <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14">TB</div>
                 <div>
                     <h1 class="text-2xl font-bold leading-tight">Freight Shipment Authorization</h1>
-                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80 text-xs">Official Logistics & Digital Acknowledgment</p>
+                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80">Official Logistics & Digital Acknowledgment</p>
                 </div>
             </div>
         </div>
@@ -60,7 +59,7 @@
                         <h3 class="text-sm font-black text-slate-800 uppercase border-b pb-2">Shipment Data Review</h3>
                         <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm text-slate-700"></div>
                         
-                        <div class="p-5 override-box rounded-r-xl space-y-4">
+                        <div class="override-box space-y-4">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" id="addr_override_check" class="h-5 w-5 rounded border-gray-300 text-blue-600 cursor-pointer" onchange="toggleOverride()">
                                 <label for="addr_override_check" class="mb-0 text-blue-800 font-bold text-[11px] cursor-pointer">Request Alternate Delivery Location</label>
@@ -68,31 +67,30 @@
                             
                             <div id="overrideFields" class="hidden space-y-4 pt-2 border-t border-blue-200">
                                 <div>
-                                    <label>Preferred Delivery Location Type</label>
+                                    <label>Location Category</label>
                                     <select id="location_type" onchange="updateOverrideUI()">
-                                        <option value="">-- Select Type --</option>
-                                        <option value="Storage Unit">Storage Unit</option>
-                                        <option value="Pickup">Pickup from Carrier Hub</option>
-                                        <option value="Different Address">Different Address than provided</option>
+                                        <option value="">-- Select Category --</option>
+                                        <option value="Storage Unit (Dispatcher approved)">Storage Unit (Dispatcher already approved)</option>
+                                        <option value="Pickup">Pickup (Carrier Hub)</option>
+                                        <option value="Alternate Site">Different Address than provided</option>
                                     </select>
                                 </div>
                                 <div id="new_addr_div" class="hidden">
-                                    <label id="addr_label">New Delivery Address Details</label>
-                                    <textarea id="alt_address_text" placeholder="Enter Full Address, Unit #, or Pickup Details" rows="2"></textarea>
-                                    <p id="error_msg" class="hidden text-[10px] text-red-500 font-bold mt-1">This field is required for alternate addresses.</p>
+                                    <label>Specify Alternate Address</label>
+                                    <textarea id="alt_address_text" placeholder="Enter full address..." rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[12px] text-amber-900 leading-relaxed font-medium">
+                        <div id="disclosureText" class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[12px] text-amber-900 leading-relaxed font-medium">
                             By providing your digital signature, you agree to accept the shipment at the address provided (or specified alternate location). Please note that deliveries arrive on pallets.
                         </div>
                     </div>
 
                     <div class="space-y-6">
                         <div>
-                            <label class="text-blue-600 font-black">Electronic Signature (Type Name to Confirm)</label>
-                            <input type="text" id="typed_sig" oninput="updateSigPreview()" placeholder="Full Legal Name" class="signature-font border-none focus:ring-0">
+                            <label class="text-blue-600 font-black">Electronic Signature</label>
+                            <input type="text" id="typed_sig" oninput="updateSigPreview()" placeholder="Type Full Name" class="signature-font border-none focus:ring-0">
                         </div>
 
                         <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -102,11 +100,9 @@
                             </label>
                         </div>
 
-                        <div class="text-right flex justify-between items-end border-t pt-4">
-                            <div class="text-left text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
-                                Form Status<br><span class="text-emerald-500 font-black tracking-widest">Verified Link Active</span>
-                            </div>
-                            <div><label>Execution Date</label><span id="dateDisplay" class="font-bold text-slate-800 text-sm"></span></div>
+                        <div class="text-right border-t pt-4">
+                            <label>Execution Date</label>
+                            <span id="dateDisplay" class="font-bold text-slate-800 text-sm"></span>
                         </div>
 
                         <button type="button" id="submitBtn" onclick="submitAuthorization()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-xl shadow-lg text-xs uppercase tracking-widest hover:bg-blue-700 transition-all">
@@ -116,17 +112,23 @@
                 </div>
             </div>
 
-            <div id="auditTrail" class="hidden mt-10 pt-6 border-t border-slate-100 space-y-2 text-[8px] text-slate-400 font-mono uppercase">
-                <p class="font-bold text-slate-500">Digital Signature Verification Certificate</p>
-                <p id="audit_id"></p>
-                <p id="audit_ts"></p>
-                <p id="audit_ua"></p>
+            <div id="auditTrail" class="hidden security-stamp space-y-2 text-[9px] text-slate-500 font-mono uppercase">
+                <p class="font-bold text-blue-600 text-[10px] mb-2">Digital Signature Verification Certificate</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p id="audit_id"></p>
+                        <p id="audit_ts"></p>
+                    </div>
+                    <div class="text-right">
+                        <p id="audit_ua"></p>
+                    </div>
+                </div>
             </div>
 
             <div id="successView" class="hidden text-center py-12 space-y-4">
                 <div class="text-6xl">✅</div>
                 <h2 class="text-2xl font-bold text-slate-800 uppercase">Authorization Recorded</h2>
-                <p class="text-slate-500 max-w-sm mx-auto">Your delivery preference has been updated. A certified PDF copy has been saved to your device.</p>
+                <p class="text-slate-500">Authorization for WO <span id="success_wo" class="font-bold"></span> has been submitted. A certified copy has been saved.</p>
             </div>
         </form>
     </div>
@@ -144,25 +146,21 @@
 
         function updateOverrideUI() {
             const type = document.getElementById('location_type').value;
-            const div = document.getElementById('new_addr_div');
-            const label = document.getElementById('addr_label');
-            
-            div.style.display = (type !== "") ? 'block' : 'none';
-            label.innerText = (type === "Different Address") ? "New Delivery Address Details" : "Unit # or Specific Pickup Details";
+            document.getElementById('new_addr_div').style.display = (type === "Alternate Site") ? 'block' : 'none';
         }
 
         function checkMode() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('mode') === 'sign') {
-                document.getElementById('setupFields').classList.add('hidden');
+                document.getElementById('setupFields').remove();
                 document.getElementById('icMode').classList.remove('hidden');
                 document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 
                 document.getElementById('summaryZone').innerHTML = `
-                    <div class="flex justify-between"><strong>Contractor Name:</strong> <span class="font-bold">${params.get('icn') || 'N/A'}</span></div>
+                    <div class="flex justify-between"><strong>Contractor:</strong> <span class="font-bold">${params.get('icn') || 'N/A'}</span></div>
                     <div class="flex justify-between"><strong>Work Order ID:</strong> <span class="text-blue-600 font-bold">${params.get('wo') || 'N/A'}</span></div>
-                    <div class="flex justify-between"><strong>Unit Quantity:</strong> <span>${params.get('k') || '0'} Kiosks</span></div>
-                    <div class="pt-2 border-t mt-2"><strong>Original Address:</strong><br><span class="text-slate-600 font-medium">${params.get('addr') || 'N/A'}</span></div>
+                    <div class="flex justify-between"><strong>Kiosk Count:</strong> <span>${params.get('k') || '0'} Units</span></div>
+                    <div class="pt-2 border-t mt-2"><strong>Primary Address:</strong><br><span class="text-slate-600 font-medium">${params.get('addr') || 'N/A'}</span></div>
                 `;
             }
         }
@@ -177,8 +175,8 @@
             const link = `${baseUrl}?mode=sign&icn=${encodeURIComponent(document.getElementById('ic_name_setup').value)}&wo=${encodeURIComponent(document.getElementById('task_num').value)}&k=${encodeURIComponent(document.getElementById('kiosks').value)}&addr=${encodeURIComponent(document.getElementById('delivery_addr').value)}&de=${encodeURIComponent(document.getElementById('d_email').value)}&ice=${encodeURIComponent(document.getElementById('ic_email_setup').value)}`;
             
             navigator.clipboard.writeText(link);
-            window.location.href = `mailto:${document.getElementById('ic_email_setup').value}?subject=Shipment Authorization: WO#${document.getElementById('task_num').value}&body=Please review shipment here: ${link}`;
-            alert("Link copied to clipboard!");
+            window.location.href = `mailto:${document.getElementById('ic_email_setup').value}?subject=Verification Required: Shipment WO#${document.getElementById('task_num').value}&body=Please authorize shipment here: ${link}`;
+            alert("Link copied!");
         }
 
         async function submitAuthorization() {
@@ -188,44 +186,41 @@
             const locType = document.getElementById('location_type').value;
             const altText = document.getElementById('alt_address_text');
 
-            // VALIDATION
-            let hasError = false;
-            altText.classList.remove('error-border');
-            document.getElementById('error_msg').classList.add('hidden');
-
-            if (!name || name.length < 3) { alert("Legal name required."); return; }
-            if (!consent) { alert("Legal consent required."); return; }
-            
-            if (overrideActive) {
-                if (!locType) { alert("Please select a location type."); return; }
-                if (!altText.value.trim()) {
-                    altText.classList.add('error-border');
-                    document.getElementById('error_msg').classList.remove('hidden');
-                    hasError = true;
-                }
-            }
-
-            if (hasError) return;
+            if (!name || name.length < 3) return alert("Full signature name required.");
+            if (!consent) return alert("Please check the legal consent box.");
+            if (overrideActive && locType === "Alternate Site" && !altText.value.trim()) return alert("Please provide the alternate address.");
 
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "Securing Record...";
+            btn.disabled = true; btn.innerText = "Securing Certificate...";
 
             const params = new URLSearchParams(window.location.search);
             const ts = new Date().toISOString();
             const txID = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
+            // Populate Audit Trail for PDF rendering
             document.getElementById('auditTrail').classList.remove('hidden');
-            document.getElementById('audit_id').innerText = `Verification ID: ${txID}`;
-            document.getElementById('audit_ts').innerText = `Timestamp: ${ts}`;
-            document.getElementById('audit_ua').innerText = `System Environment: ${navigator.userAgent}`;
+            document.getElementById('audit_id').innerText = `ID: ${txID}`;
+            document.getElementById('audit_ts').innerText = `TS: ${ts}`;
+            document.getElementById('audit_ua').innerText = `ENV: ${navigator.userAgent.substring(0, 50)}...`;
+
+            // If an override was selected, update the summary so it shows on the final PDF
+            if(overrideActive) {
+                const overrideDetails = locType === "Alternate Site" ? altText.value : locType;
+                document.getElementById('summaryZone').innerHTML += `
+                    <div class="pt-2 border-t mt-2 text-blue-700 font-bold">
+                        <strong>Requested Delivery Change:</strong><br>
+                        <span class="text-sm uppercase tracking-tighter">${overrideDetails}</span>
+                    </div>
+                `;
+            }
 
             const formData = new FormData();
             formData.append('Work Order', params.get('wo'));
             formData.append('Signatory', name);
-            formData.append('Original Address', params.get('addr'));
-            formData.append('Alternate Location', overrideActive ? 'YES' : 'NO');
-            formData.append('Loc Type', locType || 'None');
-            formData.append('Loc Detail', altText.value || 'None');
+            formData.append('Primary Address', params.get('addr'));
+            formData.append('Alternate Req', overrideActive ? 'YES' : 'NO');
+            formData.append('Final Destination', overrideActive ? (locType === "Alternate Site" ? altText.value : locType) : 'Primary');
+            formData.append('Legal Affirmation', `Agreed: "${document.getElementById('disclosureText').innerText}"`);
             formData.append('Verification ID', txID);
             formData.append('_replyto', params.get('de'));
 
@@ -235,7 +230,8 @@
                 });
 
                 if (response.ok) {
-                    html2pdf().set({ margin: 0.5, filename: `AUTH_WO_${params.get('wo')}.pdf`, jsPDF: { format: 'letter' } })
+                    document.getElementById('success_wo').innerText = params.get('wo');
+                    html2pdf().set({ margin: 0.5, filename: `SHIPMENT_AUTH_WO_${params.get('wo')}.pdf`, jsPDF: { format: 'letter' } })
                     .from(document.getElementById('captureArea')).save();
                     document.getElementById('icMode').style.display = 'none';
                     document.getElementById('successView').classList.remove('hidden');
