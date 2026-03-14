@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Freight Authorization | Terraboost</title>
+    <title>Certified Freight Authorization | Terraboost</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
@@ -23,12 +23,12 @@
 <body class="p-4 md:p-12">
 
     <div id="captureArea" class="max-w-4xl mx-auto form-card bg-white border border-gray-100">
-        <div class="brand-blue p-8 text-white flex justify-between items-center text-white">
-            <div class="flex items-center gap-4 text-white">
-                <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14">TB</div>
+        <div class="brand-blue p-8 text-white flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14 text-white">TB</div>
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight">Freight Shipment Authorization</h1>
-                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80">Official Logistics & Digital Acknowledgment</p>
+                    <h1 class="text-2xl font-bold leading-tight text-white">Freight Shipment Authorization</h1>
+                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80 text-white">Certified Logistics Documentation</p>
                 </div>
             </div>
         </div>
@@ -49,7 +49,7 @@
                         <div><label>Authorized Delivery Destination</label><input type="text" id="delivery_addr" placeholder="Primary Address"></div>
                     </div>
                 </div>
-                <button type="button" onclick="generateVerificationLink()" class="w-full brand-blue text-white font-bold py-4 rounded-xl shadow-lg text-xs uppercase tracking-widest">
+                <button type="button" onclick="generateVerificationLink()" class="w-full brand-blue text-white font-bold py-4 rounded-xl shadow-lg text-xs uppercase tracking-widest transition-transform active:scale-[0.98]">
                     🚀 Generate & Dispatch Verification Link
                 </button>
             </div>
@@ -62,8 +62,8 @@
                             </div>
 
                         <div id="pdfChangeZone" class="hidden highlight-change">
-                            <label class="text-amber-700 font-extrabold">Requested Delivery Change</label>
-                            <p id="changeText" class="text-slate-800 font-bold uppercase"></p>
+                            <label class="text-amber-700 font-extrabold text-[10px] uppercase tracking-widest">Requested Delivery Change</label>
+                            <p id="changeText" class="text-slate-800 font-bold uppercase mt-1"></p>
                         </div>
                         
                         <div class="override-box space-y-4 no-print">
@@ -121,16 +121,21 @@
 
             <div id="auditTrail" class="hidden security-stamp space-y-2 text-[9px] text-slate-500 font-mono uppercase">
                 <p class="font-bold text-blue-600 text-[10px] mb-2">Digital Signature Verification Certificate</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><p id="audit_id"></p><p id="audit_ts"></p></div>
-                    <div class="text-right"><p id="audit_ua"></p></div>
+                <div class="grid grid-cols-2 gap-4 text-slate-500">
+                    <div>
+                        <p id="audit_id" class="font-bold text-slate-700"></p>
+                        <p id="audit_ts"></p>
+                    </div>
+                    <div class="text-right">
+                        <p id="audit_ua"></p>
+                    </div>
                 </div>
             </div>
 
             <div id="successView" class="hidden text-center py-12 space-y-4 text-slate-800">
                 <div class="text-6xl text-slate-800">✅</div>
                 <h2 class="text-2xl font-bold uppercase text-slate-800">Authorization Recorded</h2>
-                <p class="text-slate-500">Logistics have been notified. Your certified PDF has been generated.</p>
+                <p class="text-slate-500">Records have been updated. Your certified PDF has been generated.</p>
             </div>
         </form>
     </div>
@@ -150,30 +155,36 @@
             document.getElementById('new_addr_div').style.display = (type === "Alternate Site") ? 'block' : 'none';
         }
 
-        // IMPROVED DATA MAPPING
+        function getInitials(name) {
+            if (!name) return "TB";
+            return name.split(' ').map(n => n[0]).join('').toUpperCase();
+        }
+
         function runMapping() {
             const params = new URLSearchParams(window.location.search);
-            
-            // Try URL first, then fall back to input fields (for local testing)
             const data = {
                 icn: params.get('icn') || document.getElementById('ic_name_setup').value,
+                ice: params.get('ice') || document.getElementById('ic_email_setup').value,
                 wo: params.get('wo') || document.getElementById('task_num').value,
                 k: params.get('k') || document.getElementById('kiosks').value,
-                addr: params.get('addr') || document.getElementById('delivery_addr').value
+                addr: params.get('addr') || document.getElementById('delivery_addr').value,
+                de: params.get('de') || document.getElementById('d_email').value
             };
 
             document.getElementById('summaryZone').innerHTML = `
-                <div class="flex justify-between"><strong>Contractor:</strong> <span class="font-bold">${data.icn || 'N/A'}</span></div>
-                <div class="flex justify-between"><strong>Work Order ID:</strong> <span class="text-blue-600 font-bold">${data.wo || 'N/A'}</span></div>
+                <div class="flex justify-between"><strong>Contractor:</strong> <span class="font-bold text-slate-900">${data.icn || 'N/A'}</span></div>
+                <div class="flex justify-between text-[11px]"><strong>Email:</strong> <span>${data.ice || 'N/A'}</span></div>
+                <div class="flex justify-between"><strong>Work Order ID:</strong> <span class="text-blue-600 font-bold underline underline-offset-4">${data.wo || 'N/A'}</span></div>
                 <div class="flex justify-between"><strong>Kiosk Volume:</strong> <span>${data.k || '0'} Units</span></div>
-                <div class="pt-2 border-t mt-2"><strong>Primary Address:</strong><br><span class="text-slate-600 font-medium">${data.addr || 'N/A'}</span></div>
+                <div class="flex justify-between border-t pt-2 mt-2"><strong>Primary Address:</strong> <span class="text-right text-xs max-w-[220px] font-medium italic">${data.addr || 'N/A'}</span></div>
             `;
+            return data;
         }
 
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             if (params.get('mode') === 'sign') {
-                document.getElementById('setupFields').classList.add('hidden');
+                document.getElementById('setupFields').remove();
                 document.getElementById('icMode').classList.remove('hidden');
                 document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 runMapping();
@@ -181,26 +192,18 @@
         };
 
         function generateVerificationLink() {
-            const dEmail = document.getElementById('d_email').value;
-            const icn = document.getElementById('ic_name_setup').value;
-            const ice = document.getElementById('ic_email_setup').value;
-            const wo = document.getElementById('task_num').value;
-            const k = document.getElementById('kiosks').value;
-            const addr = document.getElementById('delivery_addr').value;
-
-            if (!dEmail || !ice || !wo) return alert("Required configuration missing.");
+            const d = runMapping();
+            if (!d.de || !d.ice || !d.wo) return alert("Required configuration missing.");
 
             const baseUrl = window.location.href.split('?')[0];
-            const link = `${baseUrl}?mode=sign&icn=${encodeURIComponent(icn)}&wo=${encodeURIComponent(wo)}&k=${encodeURIComponent(k)}&addr=${encodeURIComponent(addr)}&de=${encodeURIComponent(dEmail)}&ice=${encodeURIComponent(ice)}`;
+            const link = `${baseUrl}?mode=sign&icn=${encodeURIComponent(d.icn)}&wo=${encodeURIComponent(d.wo)}&k=${encodeURIComponent(d.k)}&addr=${encodeURIComponent(d.addr)}&de=${encodeURIComponent(d.de)}&ice=${encodeURIComponent(d.ice)}`;
             
             navigator.clipboard.writeText(link);
+            const subject = `Action Required: Shipment Authorization WO#${d.wo}`;
+            const body = `Hi ${d.icn},\n\nPlease review shipment logistics for Work Order #${d.wo} and execute acknowledgment here: ${link}`;
             
-            // SUBJECT LINE RESTORED TO "Action Required"
-            const subject = `Action Required: Shipment Authorization WO#${wo}`;
-            const body = `Hi ${icn},\n\nPlease review shipment logistics here: ${link}`;
-            
-            window.location.href = `mailto:${ice}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            alert("Link Copied!");
+            window.location.href = `mailto:${d.ice}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            alert("Verification Link Copied to Clipboard!");
         }
 
         async function submitAuthorization() {
@@ -210,14 +213,18 @@
             const locType = document.getElementById('location_type').value;
             const altText = document.getElementById('alt_address_text').value;
 
-            if (!name || name.length < 3 || !consent) return alert("Signature and consent required.");
+            if (!name || name.length < 3 || !consent) return alert("Signature and legal consent required.");
             
             const btn = document.getElementById('submitBtn');
             btn.disabled = true; btn.innerText = "Securing Certificate...";
 
-            const params = new URLSearchParams(window.location.search);
+            const finalData = runMapping();
             const ts = new Date().toISOString();
-            const txID = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const dateStr = new Date().toISOString().split('T')[0];
+            
+            // Generate Initialed Transaction ID
+            const initials = getInitials(finalData.icn);
+            const txID = `${initials}-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${finalData.wo}`;
 
             if(overrideActive) {
                 document.getElementById('pdfChangeZone').classList.remove('hidden');
@@ -225,20 +232,22 @@
             }
 
             document.getElementById('auditTrail').classList.remove('hidden');
-            document.getElementById('audit_id').innerText = `ID: ${txID}`;
-            document.getElementById('audit_ts').innerText = `TS: ${ts}`;
-            document.getElementById('audit_ua').innerText = `ENV: ${navigator.userAgent.substring(0, 50)}...`;
-
-            // Ensure mapping is current for PDF capture
-            runMapping();
+            document.getElementById('audit_id').innerText = `Verification ID: ${txID}`;
+            document.getElementById('audit_ts').innerText = `Certified Timestamp: ${ts}`;
+            document.getElementById('audit_ua').innerText = `System Env: ${navigator.userAgent.substring(0, 45)}...`;
 
             const formData = new FormData();
-            formData.append('Work Order', params.get('wo') || document.getElementById('task_num').value);
+            formData.append('Work Order #', finalData.wo);
+            formData.append('Contractor Name', finalData.icn);
+            formData.append('Contractor Email', finalData.ice);
+            formData.append('Kiosk Volume', finalData.k);
+            formData.append('Primary Address', finalData.addr);
             formData.append('Signatory', name);
-            formData.append('Change Requested', overrideActive ? 'YES' : 'NO');
-            formData.append('Final Location', overrideActive ? (locType === "Alternate Site" ? altText : locType) : 'Primary');
-            formData.append('Verification ID', txID);
-            formData.append('_replyto', params.get('de') || document.getElementById('d_email').value);
+            formData.append('Alternate Location Requested', overrideActive ? 'YES' : 'NO');
+            formData.append('Final Site Destination', overrideActive ? (locType === "Alternate Site" ? altText : locType) : 'Primary Address');
+            formData.append('Verification Certificate ID', txID);
+            formData.append('Legal Affirmation', `Agreed to: "${document.getElementById('disclosureText').innerText}"`);
+            formData.append('_replyto', finalData.de);
 
             try {
                 const response = await fetch('https://formspree.io/f/xgonzegv', { 
@@ -246,13 +255,14 @@
                 });
 
                 if (response.ok) {
-                    html2pdf().set({ margin: 0.5, filename: `AUTH_WO_${params.get('wo') || '0000'}.pdf`, jsPDF: { format: 'letter' } })
+                    html2pdf().set({ margin: 0.5, filename: `SHIPMENT_CERT_${finalData.wo}_${dateStr}.pdf`, jsPDF: { format: 'letter' } })
                     .from(document.getElementById('captureArea')).save();
                     document.getElementById('icMode').style.display = 'none';
                     document.getElementById('successView').classList.remove('hidden');
                 }
             } catch (error) {
-                alert("Error."); btn.disabled = false;
+                alert("Submission failed. Check connection.");
+                btn.disabled = false;
             }
         }
     </script>
