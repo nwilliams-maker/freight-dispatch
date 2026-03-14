@@ -35,6 +35,7 @@
             <div id="setupFields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <div><label>Your Dispatch Email</label><input type="email" id="d_email" placeholder="dispatch@terraboost.com"></div>
+                    <div><label>IC Email</label><input type="email" id="ic_email_setup" placeholder="ic.worker@example.com"></div>
                     <div><label>Work Order #</label><input type="text" id="task_num" placeholder="WO-0000"></div>
                 </div>
                 <div class="space-y-4">
@@ -103,6 +104,7 @@
                 document.getElementById('summaryZone').innerHTML = `
                     <div class="flex justify-between"><strong>Work Order:</strong> <span>${params.get('wo')}</span></div>
                     <div class="flex justify-between"><strong>Kiosk Count:</strong> <span>${params.get('k')}</span></div>
+                    <div class="flex justify-between"><strong>IC Email:</strong> <span>${params.get('ice')}</span></div>
                     <div class="pt-2 border-t"><strong>Address:</strong><br>${params.get('addr')}</div>
                 `;
             }
@@ -110,14 +112,20 @@
 
         function generateHandshake() {
             const baseUrl = window.location.href.split('?')[0];
-            const link = `${baseUrl}?mode=sign&wo=${encodeURIComponent(document.getElementById('task_num').value)}&k=${document.getElementById('kiosks').value}&addr=${encodeURIComponent(document.getElementById('delivery_addr').value)}&de=${encodeURIComponent(document.getElementById('d_email').value)}`;
+            const icEmail = document.getElementById('ic_email_setup').value;
+            
+            if(!icEmail || !document.getElementById('task_num').value || !document.getElementById('d_email').value) {
+                return alert("Please fill in Dispatch Email, IC Email, and Work Order #");
+            }
+
+            const link = `${baseUrl}?mode=sign&wo=${encodeURIComponent(document.getElementById('task_num').value)}&k=${document.getElementById('kiosks').value}&addr=${encodeURIComponent(document.getElementById('delivery_addr').value)}&de=${encodeURIComponent(document.getElementById('d_email').value)}&ice=${encodeURIComponent(icEmail)}`;
             
             const subject = `Sign Acknowledgement WO#${document.getElementById('task_num').value}`;
             const body = `Please review and sign here: ${link}`;
 
             navigator.clipboard.writeText(link);
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            alert("Link copied! Email app opened.");
+            window.location.href = `mailto:${icEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            alert("Handshake Link created and copied to clipboard!");
         }
 
         async function submitData() {
@@ -129,6 +137,7 @@
             const formData = new FormData();
             formData.append('Work Order', params.get('wo'));
             formData.append('Kiosk Count', params.get('k'));
+            formData.append('IC Email', params.get('ice'));
             formData.append('Address', params.get('addr'));
             formData.append('Signature', signaturePad.toDataURL());
             formData.append('_replyto', params.get('de'));
