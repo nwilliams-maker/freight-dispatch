@@ -24,17 +24,17 @@
     <div id="captureArea" class="max-w-4xl mx-auto form-card bg-white border border-gray-100">
         <div class="brand-blue p-8 text-white flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14">TB</div>
+                <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14 text-white">TB</div>
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight">Freight Shipment Authorization</h1>
-                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80">Official Logistics & Digital Acknowledgment</p>
+                    <h1 class="text-2xl font-bold leading-tight text-white text-white">Freight Shipment Authorization</h1>
+                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80 text-white">Official Logistics & Digital Acknowledgment</p>
                 </div>
             </div>
         </div>
 
         <form id="freightForm" class="p-8 space-y-8">
             
-            <div id="setupFields" class="space-y-6">
+            <div id="setupFields" class="space-y-6 no-print">
                 <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-blue-100 pb-3">1. Dispatch Configuration</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
@@ -44,8 +44,8 @@
                     </div>
                     <div class="space-y-4">
                         <div><label>Official Work Order #</label><input type="text" id="task_num" placeholder="WO-0000"></div>
-                        <div><label>Total Kiosk Volume</label><input type="number" id="kiosks" placeholder="Enter amount"></div>
-                        <div><label>Authorized Delivery Destination</label><input type="text" id="delivery_addr" placeholder="Primary Address on File"></div>
+                        <div><label>Total Kiosk Volume</label><input type="number" id="kiosks" placeholder="0"></div>
+                        <div><label>Authorized Delivery Destination</label><input type="text" id="delivery_addr" placeholder="Primary Address"></div>
                     </div>
                 </div>
                 <button type="button" onclick="generateVerificationLink()" class="w-full brand-blue text-white font-bold py-4 rounded-xl shadow-lg text-xs uppercase tracking-widest">
@@ -57,7 +57,8 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     <div class="space-y-6">
                         <h3 class="text-sm font-black text-slate-800 uppercase border-b pb-2">Shipment Data Review</h3>
-                        <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm text-slate-700"></div>
+                        <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm text-slate-700">
+                            </div>
                         
                         <div class="override-box space-y-4">
                             <div class="flex items-center gap-3">
@@ -115,28 +116,22 @@
             <div id="auditTrail" class="hidden security-stamp space-y-2 text-[9px] text-slate-500 font-mono uppercase">
                 <p class="font-bold text-blue-600 text-[10px] mb-2">Digital Signature Verification Certificate</p>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p id="audit_id"></p>
-                        <p id="audit_ts"></p>
-                    </div>
-                    <div class="text-right">
-                        <p id="audit_ua"></p>
-                    </div>
+                    <div><p id="audit_id"></p><p id="audit_ts"></p></div>
+                    <div class="text-right"><p id="audit_ua"></p></div>
                 </div>
             </div>
 
             <div id="successView" class="hidden text-center py-12 space-y-4">
                 <div class="text-6xl">✅</div>
                 <h2 class="text-2xl font-bold text-slate-800 uppercase">Authorization Recorded</h2>
-                <p class="text-slate-500">Authorization for WO <span id="success_wo" class="font-bold"></span> has been submitted. A certified copy has been saved.</p>
+                <p class="text-slate-500">Authorization for WO <span id="success_wo" class="font-bold text-blue-600"></span> has been transmitted.</p>
             </div>
         </form>
     </div>
 
     <script>
         function updateSigPreview() {
-            const val = document.getElementById('typed_sig').value;
-            document.getElementById('sig_name_preview').innerText = val || "the signatory";
+            document.getElementById('sig_name_preview').innerText = document.getElementById('typed_sig').value || "the signatory";
         }
 
         function toggleOverride() {
@@ -149,34 +144,49 @@
             document.getElementById('new_addr_div').style.display = (type === "Alternate Site") ? 'block' : 'none';
         }
 
-        function checkMode() {
+        // CORRECT MAPPING LOGIC
+        function mapDataToSummary(data) {
+            document.getElementById('summaryZone').innerHTML = `
+                <div class="flex justify-between"><strong>Contractor:</strong> <span class="font-bold">${data.icn || 'N/A'}</span></div>
+                <div class="flex justify-between"><strong>Work Order ID:</strong> <span class="text-blue-600 font-bold">${data.wo || 'N/A'}</span></div>
+                <div class="flex justify-between"><strong>Kiosk Volume:</strong> <span>${data.k || '0'} Units</span></div>
+                <div class="pt-2 border-t mt-2"><strong>Primary Address:</strong><br><span class="text-slate-600 font-medium">${data.addr || 'N/A'}</span></div>
+            `;
+        }
+
+        window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             if (params.get('mode') === 'sign') {
                 document.getElementById('setupFields').remove();
                 document.getElementById('icMode').classList.remove('hidden');
                 document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 
-                document.getElementById('summaryZone').innerHTML = `
-                    <div class="flex justify-between"><strong>Contractor:</strong> <span class="font-bold">${params.get('icn') || 'N/A'}</span></div>
-                    <div class="flex justify-between"><strong>Work Order ID:</strong> <span class="text-blue-600 font-bold">${params.get('wo') || 'N/A'}</span></div>
-                    <div class="flex justify-between"><strong>Kiosk Count:</strong> <span>${params.get('k') || '0'} Units</span></div>
-                    <div class="pt-2 border-t mt-2"><strong>Primary Address:</strong><br><span class="text-slate-600 font-medium">${params.get('addr') || 'N/A'}</span></div>
-                `;
+                // Pull from URL
+                mapDataToSummary({
+                    icn: params.get('icn'),
+                    wo: params.get('wo'),
+                    k: params.get('k'),
+                    addr: params.get('addr')
+                });
             }
-        }
-
-        window.onload = checkMode;
+        };
 
         function generateVerificationLink() {
-            const fields = ['d_email', 'ic_name_setup', 'ic_email_setup', 'task_num', 'kiosks', 'delivery_addr'];
-            for (let f of fields) { if (!document.getElementById(f).value) return alert("All fields are required."); }
+            const dEmail = document.getElementById('d_email').value;
+            const icn = document.getElementById('ic_name_setup').value;
+            const ice = document.getElementById('ic_email_setup').value;
+            const wo = document.getElementById('task_num').value;
+            const k = document.getElementById('kiosks').value;
+            const addr = document.getElementById('delivery_addr').value;
+
+            if (!dEmail || !ice || !wo) return alert("All fields are required.");
 
             const baseUrl = window.location.href.split('?')[0];
-            const link = `${baseUrl}?mode=sign&icn=${encodeURIComponent(document.getElementById('ic_name_setup').value)}&wo=${encodeURIComponent(document.getElementById('task_num').value)}&k=${encodeURIComponent(document.getElementById('kiosks').value)}&addr=${encodeURIComponent(document.getElementById('delivery_addr').value)}&de=${encodeURIComponent(document.getElementById('d_email').value)}&ice=${encodeURIComponent(document.getElementById('ic_email_setup').value)}`;
+            const link = `${baseUrl}?mode=sign&icn=${encodeURIComponent(icn)}&wo=${encodeURIComponent(wo)}&k=${encodeURIComponent(k)}&addr=${encodeURIComponent(addr)}&de=${encodeURIComponent(dEmail)}&ice=${encodeURIComponent(ice)}`;
             
             navigator.clipboard.writeText(link);
-            window.location.href = `mailto:${document.getElementById('ic_email_setup').value}?subject=Verification Required: Shipment WO#${document.getElementById('task_num').value}&body=Please authorize shipment here: ${link}`;
-            alert("Link copied!");
+            window.location.href = `mailto:${ice}?subject=Authorization Required: WO#${wo}&body=Please review shipment here: ${link}`;
+            alert("Verification Link Copied!");
         }
 
         async function submitAuthorization() {
@@ -184,11 +194,10 @@
             const consent = document.getElementById('legal_consent').checked;
             const overrideActive = document.getElementById('addr_override_check').checked;
             const locType = document.getElementById('location_type').value;
-            const altText = document.getElementById('alt_address_text');
+            const altText = document.getElementById('alt_address_text').value;
 
-            if (!name || name.length < 3) return alert("Full signature name required.");
-            if (!consent) return alert("Please check the legal consent box.");
-            if (overrideActive && locType === "Alternate Site" && !altText.value.trim()) return alert("Please provide the alternate address.");
+            if (!name || name.length < 3 || !consent) return alert("Signature and consent required.");
+            if (overrideActive && locType === "Alternate Site" && !altText) return alert("Alternate address required.");
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true; btn.innerText = "Securing Certificate...";
@@ -197,32 +206,29 @@
             const ts = new Date().toISOString();
             const txID = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-            // Populate Audit Trail for PDF rendering
+            // Populate Final PDF View
             document.getElementById('auditTrail').classList.remove('hidden');
             document.getElementById('audit_id').innerText = `ID: ${txID}`;
             document.getElementById('audit_ts').innerText = `TS: ${ts}`;
             document.getElementById('audit_ua').innerText = `ENV: ${navigator.userAgent.substring(0, 50)}...`;
 
-            // If an override was selected, update the summary so it shows on the final PDF
             if(overrideActive) {
-                const overrideDetails = locType === "Alternate Site" ? altText.value : locType;
                 document.getElementById('summaryZone').innerHTML += `
                     <div class="pt-2 border-t mt-2 text-blue-700 font-bold">
                         <strong>Requested Delivery Change:</strong><br>
-                        <span class="text-sm uppercase tracking-tighter">${overrideDetails}</span>
+                        <span class="text-sm uppercase">${locType === "Alternate Site" ? altText : locType}</span>
                     </div>
                 `;
             }
 
             const formData = new FormData();
-            formData.append('Work Order', params.get('wo'));
+            formData.append('Work Order', params.get('wo') || document.getElementById('task_num').value);
+            formData.append('Contractor', params.get('icn') || document.getElementById('ic_name_setup').value);
             formData.append('Signatory', name);
-            formData.append('Primary Address', params.get('addr'));
-            formData.append('Alternate Req', overrideActive ? 'YES' : 'NO');
-            formData.append('Final Destination', overrideActive ? (locType === "Alternate Site" ? altText.value : locType) : 'Primary');
-            formData.append('Legal Affirmation', `Agreed: "${document.getElementById('disclosureText').innerText}"`);
+            formData.append('Primary Address', params.get('addr') || document.getElementById('delivery_addr').value);
+            formData.append('Final Destination', overrideActive ? (locType === "Alternate Site" ? altText : locType) : 'Primary');
             formData.append('Verification ID', txID);
-            formData.append('_replyto', params.get('de'));
+            formData.append('_replyto', params.get('de') || document.getElementById('d_email').value);
 
             try {
                 const response = await fetch('https://formspree.io/f/xgonzegv', { 
@@ -230,8 +236,8 @@
                 });
 
                 if (response.ok) {
-                    document.getElementById('success_wo').innerText = params.get('wo');
-                    html2pdf().set({ margin: 0.5, filename: `SHIPMENT_AUTH_WO_${params.get('wo')}.pdf`, jsPDF: { format: 'letter' } })
+                    document.getElementById('success_wo').innerText = params.get('wo') || document.getElementById('task_num').value;
+                    html2pdf().set({ margin: 0.5, filename: `SHIPMENT_AUTH_WO_${params.get('wo') || '0000'}.pdf`, jsPDF: { format: 'letter' } })
                     .from(document.getElementById('captureArea')).save();
                     document.getElementById('icMode').style.display = 'none';
                     document.getElementById('successView').classList.remove('hidden');
