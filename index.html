@@ -35,15 +35,10 @@
             <div id="setupFields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <div><label>Your Dispatch Email</label><input type="email" id="d_email" placeholder="dispatch@terraboost.com"></div>
-                    <div><label>Freight Carrier</label><input type="text" id="carrier" placeholder="e.g. FedEx / R&L"></div>
-                    <div><label>BOL / Tracking #</label><input type="text" id="bol_num" placeholder="PRO #"></div>
+                    <div><label>Work Order #</label><input type="text" id="task_num" placeholder="WO-0000"></div>
                 </div>
                 <div class="space-y-4">
-                    <div><label>Work Order #</label><input type="text" id="task_num" placeholder="WO-0000"></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label>Pallets</label><input type="number" id="pallets" value="0"></div>
-                        <div><label>Kiosks</label><input type="number" id="kiosks" value="0"></div>
-                    </div>
+                    <div><label>Kiosk Count</label><input type="number" id="kiosks" value="0"></div>
                     <div><label>Delivery Address</label><input type="text" id="delivery_addr" placeholder="Full Address"></div>
                 </div>
                 <div class="md:col-span-2 pt-4">
@@ -59,7 +54,7 @@
                         <h3 class="text-sm font-black text-slate-800 uppercase border-b pb-2">Shipment Summary</h3>
                         <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm"></div>
                         <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[11px] text-amber-800">
-                            <strong>Notice:</strong> IC acknowledges receipt in good condition. Pallets left on-site.
+                            <strong>Notice:</strong> IC acknowledges receipt in good condition. Shipping pallets will be left on-site.
                         </div>
                     </div>
 
@@ -70,7 +65,7 @@
                             <div id="sigOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-300 font-bold uppercase text-[10px]">Sign Here</div>
                         </div>
                         <div class="flex justify-between items-center">
-                            <button type="button" onclick="signaturePad.clear()" class="text-[10px] text-slate-400 font-bold uppercase">Clear</button>
+                            <button type="button" onclick="signaturePad.clear()" class="text-[10px] text-slate-400 font-bold uppercase">Clear Signature</button>
                             <span id="dateDisplay" class="font-bold text-slate-800 text-sm"></span>
                         </div>
                         <button type="button" id="submitBtn" onclick="submitData()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg text-xs uppercase tracking-widest">
@@ -103,9 +98,8 @@
                 document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
                 
                 document.getElementById('summaryZone').innerHTML = `
-                    <div class="flex justify-between"><strong>Carrier:</strong> <span>${params.get('carrier')}</span></div>
                     <div class="flex justify-between"><strong>Work Order:</strong> <span>${params.get('wo')}</span></div>
-                    <div class="flex justify-between"><strong>Kiosks/Pallets:</strong> <span>${params.get('k')}/${params.get('p')}</span></div>
+                    <div class="flex justify-between"><strong>Kiosk Count:</strong> <span>${params.get('k')}</span></div>
                     <div class="pt-2 border-t"><strong>Address:</strong><br>${params.get('addr')}</div>
                 `;
             }
@@ -113,9 +107,9 @@
 
         function generateHandshake() {
             const baseUrl = window.location.href.split('?')[0];
-            const link = `${baseUrl}?mode=sign&carrier=${encodeURIComponent(document.getElementById('carrier').value)}&wo=${encodeURIComponent(document.getElementById('task_num').value)}&k=${document.getElementById('kiosks').value}&p=${document.getElementById('pallets').value}&addr=${encodeURIComponent(document.getElementById('delivery_addr').value)}&de=${encodeURIComponent(document.getElementById('d_email').value)}`;
+            const link = `${baseUrl}?mode=sign&wo=${encodeURIComponent(document.getElementById('task_num').value)}&k=${document.getElementById('kiosks').value}&addr=${encodeURIComponent(document.getElementById('delivery_addr').value)}&de=${encodeURIComponent(document.getElementById('d_email').value)}`;
             
-            window.location.href = `mailto:?subject=Sign WO#${document.getElementById('task_num').value}&body=Sign here: ${link}`;
+            window.location.href = `mailto:?subject=Sign Acknowledgement WO#${document.getElementById('task_num').value}&body=Please review and sign here: ${link}`;
         }
 
         async function submitData() {
@@ -126,12 +120,14 @@
             const params = new URLSearchParams(window.location.search);
             const formData = new FormData();
             formData.append('Work Order', params.get('wo'));
+            formData.append('Kiosk Count', params.get('k'));
+            formData.append('Address', params.get('addr'));
             formData.append('Signature', signaturePad.toDataURL());
             formData.append('_replyto', params.get('de'));
 
             await fetch('https://formspree.io/f/xgonzegv', { method: 'POST', body: formData, headers: {'Accept': 'application/json'} });
 
-            html2pdf().set({ margin: 0.5, filename: `WO_${params.get('wo')}.pdf`, jsPDF: { format: 'letter' } })
+            html2pdf().set({ margin: 0.5, filename: `Signed_WO_${params.get('wo')}.pdf`, jsPDF: { format: 'letter' } })
             .from(document.getElementById('captureArea')).save();
 
             document.getElementById('icMode').style.display = 'none';
