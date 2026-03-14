@@ -16,96 +16,79 @@
         .signature-line { position: absolute; bottom: 50px; left: 10%; right: 10%; border-bottom: 2px solid #94a3b8; pointer-events: none; }
         label { color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.65rem; margin-bottom: 6px; display: block; }
         input { border-radius: 12px !important; border: 1px solid #e2e8f0; padding: 12px; font-size: 14px; width: 100%; color: #1e293b; background: #fdfdfd; }
-        .summary-pill { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-        
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; padding: 0; margin: 0; }
-            .document-card { box-shadow: none !important; border: none !important; margin: 0 !important; width: 100% !important; border-radius: 0 !important; }
-        }
+        .summary-pill { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; min-height: 50px; }
+        .val-text { font-weight: 700; color: #1e293b; }
     </style>
 </head>
 <body class="p-4 md:p-10">
 
 <div class="document-card overflow-hidden" id="form-content">
     <div class="header-bar p-8 text-white flex justify-between items-center">
-        <div class="flex items-center gap-5">
+        <div class="flex items-center gap-5 text-white">
             <div class="bg-white/10 p-3 rounded-2xl font-extrabold text-2xl border border-white/20 w-14 h-14 flex items-center justify-center">TB</div>
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight uppercase">Freight Shipment Acknowledgement</h1>
                 <p class="text-xs opacity-70 font-bold uppercase tracking-[0.2em] mt-1">Logistics & Supply Chain Operations</p>
             </div>
         </div>
-        <div id="statusLabel" class="bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-            Secure Entry
-        </div>
     </div>
 
     <div class="p-8 md:p-10 space-y-6">
-        <input type="hidden" id="h_wo">
-        <input type="hidden" id="h_ic">
-        <input type="hidden" id="h_kio">
-        <input type="hidden" id="h_addr">
         <input type="hidden" id="h_de">
 
-        <div id="dispatcherZone" class="space-y-6 no-print">
+        <div id="setupView" class="space-y-6">
             <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-blue-100 pb-3">1. Dispatcher Setup</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
-                    <div><label>Your Email (Return Copy)</label><input type="email" id="d_email" placeholder="dispatch@terraboost.com" class="bg-blue-50 border-blue-200"></div>
-                    <div><label>IC Email Address</label><input type="email" id="ic_email" placeholder="worker@email.com"></div>
+                    <div><label>Your Email (Return Copy)</label><input type="email" id="d_email" placeholder="dispatch@terraboost.com"></div>
+                    <div><label>IC Email</label><input type="email" id="ic_email" placeholder="worker@email.com"></div>
                     <div><label>IC Name</label><input type="text" id="ic_name_input" placeholder="Full Legal Name"></div>
                 </div>
                 <div class="space-y-4">
-                    <div><label>Work Order / Task #</label><input type="text" id="wo_input" placeholder="WO-0000"></div>
+                    <div><label>Work Order #</label><input type="text" id="wo_input" placeholder="WO-0000"></div>
                     <div><label>Kiosk Count</label><input type="number" id="kio_input" value="0"></div>
                     <div><label>Delivery Address</label><input type="text" id="addr_input" placeholder="Street, City, State, Zip"></div>
                 </div>
             </div>
-            <button onclick="sendToIC()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest hover:bg-black transition-all">🚀 Send to IC for Signature</button>
+            <button onclick="generateLink()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest hover:bg-black transition-all">🚀 Create & Send Link</button>
         </div>
 
-        <div id="icZone" class="hidden space-y-6">
-            <div id="icReviewZone" class="space-y-5">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2">Shipment Acknowledgment</h3>
-                <div id="summaryContent" class="space-y-2"></div>
-                
-                <div class="bg-slate-50 border-l-4 border-slate-800 p-5 rounded-r-xl text-xs leading-relaxed text-slate-700">
-                    <p>I authorize and accept the delivery of these items to the specified property address.</p>
-                    <p class="mt-1"><strong>Pallet Disposition:</strong> I acknowledge and agree that all shipping pallets will be unloaded and left on the delivery property. I accept full responsibility for the items that will be offloaded.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-                    <div class="space-y-3">
-                        <label>IC Signature</label>
-                        <div class="relative">
-                            <canvas id="sigCanvas"></canvas>
-                            <div class="signature-line"></div>
-                        </div>
-                        <button onclick="signaturePad.clear()" class="no-print text-[9px] font-black text-slate-400 uppercase">Clear Signature</button>
-                    </div>
-                    
-                    <div class="space-y-4 text-right">
-                        <div>
-                            <label>Acceptance Date</label>
-                            <input type="text" id="sig_date_display" readonly class="font-bold border-none bg-transparent text-lg text-right w-full">
-                        </div>
-                        <button id="submitBtn" onclick="finalizeIC()" class="no-print w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs tracking-widest transition-all">Finalize & Acknowledge</button>
-                    </div>
-                </div>
+        <div id="signView" class="hidden space-y-6">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2">Shipment Acknowledgment</h3>
+            
+            <div class="space-y-3">
+                <div class="summary-pill"><label class="mb-0">IC Name</label><span id="display_ic" class="val-text"></span></div>
+                <div class="summary-pill"><label class="mb-0">Work Order</label><span id="display_wo" class="val-text text-blue-600"></span></div>
+                <div class="summary-pill"><label class="mb-0">Kiosk Count</label><span id="display_kio" class="val-text"></span></div>
+                <div class="summary-pill flex-col items-start"><label>Delivery Address</label><span id="display_addr" class="val-text text-sm"></span></div>
             </div>
 
-            <div id="successZone" class="hidden no-print text-center py-6 space-y-4">
-                <div class="text-4xl">✅</div>
-                <h2 class="text-xl font-extrabold text-slate-900 uppercase">Acknowledgement Recorded</h2>
-                <p class="text-xs text-slate-500 max-w-xs mx-auto">Thank you. Your signature has been sent to dispatch and a copy has been saved to your device.</p>
+            <div class="bg-slate-50 border-l-4 border-slate-800 p-5 rounded-r-xl text-xs leading-relaxed text-slate-700">
+                <p>I authorize and accept the delivery of these items to the specified property address.</p>
+                <p class="mt-2"><strong>Pallet Disposition:</strong> I acknowledge and agree that all shipping pallets will be unloaded and left on the delivery property. I accept full responsibility for the items that will be offloaded.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                <div class="space-y-3">
+                    <label>IC Signature</label>
+                    <div class="relative">
+                        <canvas id="sigCanvas"></canvas>
+                        <div class="signature-line"></div>
+                    </div>
+                    <button onclick="signaturePad.clear()" class="text-[9px] font-black text-slate-400 uppercase">Clear</button>
+                </div>
+                <div class="space-y-4 text-right">
+                    <div><label>Date Signed</label><input type="text" id="display_date" readonly class="font-bold border-none bg-transparent text-lg text-right w-full"></div>
+                    <button id="submitBtn" onclick="submitToFormspree()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs tracking-widest">Finalize & Submit</button>
+                </div>
             </div>
         </div>
 
-        <footer class="pt-6 border-t border-slate-100 flex justify-between items-center opacity-40">
-            <p class="text-[8px] font-bold uppercase tracking-widest text-slate-900">Terraboost Media Logistics</p>
-            <p class="text-[8px] text-slate-900 font-bold">Ref: TB-FRT-ACK-V4</p>
-        </footer>
+        <div id="successView" class="hidden text-center py-10 space-y-4">
+            <div class="text-6xl">✅</div>
+            <h2 class="text-xl font-extrabold text-slate-900 uppercase">Submitted Successfully</h2>
+            <p class="text-xs text-slate-500">A copy has been sent to dispatch and saved to your device.</p>
+        </div>
     </div>
 </div>
 
@@ -115,60 +98,50 @@
 
     window.onload = () => {
         signaturePad = new SignaturePad(canvas, { penColor: '#1e293b', minWidth: 1.5 });
-        const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('sig_date_display').value = today;
-
+        
         const params = new URLSearchParams(window.location.search);
-        if (params.has('mode')) {
-            // TRANSFER DATA TO HIDDEN STORAGE IMMEDIATELY ON LOAD
-            document.getElementById('h_wo').value = params.get('wo') || 'N/A';
-            document.getElementById('h_ic').value = params.get('ic') || 'N/A';
-            document.getElementById('h_kio').value = params.get('kio') || '0';
-            document.getElementById('h_addr').value = params.get('addr') || 'N/A';
-            document.getElementById('h_de').value = params.get('de') || '';
-
-            document.getElementById('dispatcherZone').style.display = 'none';
-            document.getElementById('icZone').classList.remove('hidden');
-            document.getElementById('statusLabel').innerText = "AWAITING SIGNATURE";
-            renderSummary();
+        
+        // If "mode=sign" is in URL, we show the IC signing view
+        if (params.get('mode') === 'sign') {
+            document.getElementById('setupView').remove();
+            document.getElementById('signView').classList.remove('hidden');
+            
+            // Populate fields and handle "null" by providing a fallback empty string
+            document.getElementById('display_ic').innerText = params.get('ic') || "Not Provided";
+            document.getElementById('display_wo').innerText = params.get('wo') || "Not Provided";
+            document.getElementById('display_kio').innerText = params.get('kio') || "0";
+            document.getElementById('display_addr').innerText = params.get('addr') || "Not Provided";
+            document.getElementById('h_de').value = params.get('de') || "";
+            document.getElementById('display_date').value = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         }
     };
 
-    function renderSummary() {
-        document.getElementById('summaryContent').innerHTML = `
-            <div class="summary-pill"><span class="text-[10px] font-black text-slate-400 uppercase">IC Name</span><span class="font-bold text-slate-800">${document.getElementById('h_ic').value}</span></div>
-            <div class="summary-pill"><span class="text-[10px] font-black text-slate-400 uppercase">Work Order</span><span class="font-bold text-blue-600">${document.getElementById('h_wo').value}</span></div>
-            <div class="summary-pill"><span class="text-[10px] font-black text-slate-400 uppercase">Kiosk Count</span><span class="text-lg font-extrabold text-slate-800">${document.getElementById('h_kio').value}</span></div>
-            <div class="summary-pill flex-col items-start"><span class="text-[10px] font-black text-slate-400 uppercase mb-1">Delivery Address</span><span class="font-bold text-sm text-slate-700">${document.getElementById('h_addr').value}</span></div>
-        `;
-    }
-
-    function sendToIC() {
+    function generateLink() {
         const d_email = document.getElementById('d_email').value;
         const ic_email = document.getElementById('ic_email').value;
         const wo = document.getElementById('wo_input').value;
-        if(!d_email || !ic_email || !wo) return alert("All setup fields are required.");
+        
+        if(!d_email || !ic_email || !wo) return alert("Please fill in Dispatch Email, IC Email, and WO#.");
 
         const baseUrl = window.location.href.split('?')[0];
         const link = `${baseUrl}?mode=sign&ic=${encodeURIComponent(document.getElementById('ic_name_input').value)}&wo=${encodeURIComponent(wo)}&kio=${document.getElementById('kio_input').value}&addr=${encodeURIComponent(document.getElementById('addr_input').value)}&de=${encodeURIComponent(d_email)}`;
 
-        window.location.href = `mailto:${ic_email}?subject=Sign Required: WO#${wo}&body=Please review and sign for this delivery here: ${link}`;
-        alert("Email triggered and link copied!");
+        window.location.href = `mailto:${ic_email}?subject=Sign: WO#${wo}&body=Please review and sign for this delivery here: ${link}`;
     }
 
-    async function finalizeIC() {
+    async function submitToFormspree() {
         if (signaturePad.isEmpty()) return alert("Signature is required.");
         
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.innerText = "Submitting...";
 
+        const params = new URLSearchParams(window.location.search);
         const formData = new FormData();
-        formData.append('Work Order', document.getElementById('h_wo').value);
-        formData.append('IC Name', document.getElementById('h_ic').value);
-        formData.append('Kiosk Count', document.getElementById('h_kio').value);
-        formData.append('Address', document.getElementById('h_addr').value);
-        formData.append('Date Signed', document.getElementById('sig_date_display').value);
+        formData.append('Work Order', params.get('wo'));
+        formData.append('IC Name', params.get('ic'));
+        formData.append('Kiosk Count', params.get('kio'));
+        formData.append('Address', params.get('addr'));
         formData.append('Signature Link', signaturePad.toDataURL());
         formData.append('_replyto', document.getElementById('h_de').value);
 
@@ -180,21 +153,16 @@
             });
 
             if (response.ok) {
-                // Generate PDF for IC records
-                const element = document.getElementById('form-content');
-                html2pdf().set({ margin: 0.2, filename: `WO_${document.getElementById('h_wo').value}_Signed.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2 }, jsPDF: { format: 'letter' } })
-                .from(element).save();
+                // Generate PDF
+                html2pdf().set({ margin: 0.2, filename: `WO_${params.get('wo')}_Signed.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2 }, jsPDF: { format: 'letter' } })
+                .from(document.getElementById('form-content')).save();
 
-                document.getElementById('icReviewZone').style.display = 'none';
-                document.getElementById('successZone').classList.remove('hidden');
-                document.getElementById('statusLabel').innerText = "SUBMITTED";
-            } else {
-                throw new Error();
+                document.getElementById('signView').style.display = 'none';
+                document.getElementById('successView').classList.remove('hidden');
             }
         } catch (err) {
-            alert("Submission error. Please check your connection.");
+            alert("Error submitting. Please check your connection.");
             btn.disabled = false;
-            btn.innerText = "Finalize & Acknowledge";
         }
     }
 </script>
