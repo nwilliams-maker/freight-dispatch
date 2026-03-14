@@ -21,11 +21,11 @@
 
     <div id="captureArea" class="max-w-4xl mx-auto form-card bg-white border border-gray-100">
         <div class="brand-blue p-8 text-white flex justify-between items-center">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 text-white">
                 <div class="bg-white/10 p-3 rounded-xl font-extrabold text-2xl border border-white/20 text-center w-14">TB</div>
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight text-white">Freight Shipment Authorization</h1>
-                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80 text-white text-xs">Official Logistics & Digital Acknowledgment</p>
+                    <h1 class="text-2xl font-bold leading-tight">Freight Shipment Authorization</h1>
+                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest opacity-80 text-white">Official Logistics & Digital Acknowledgment</p>
                 </div>
             </div>
         </div>
@@ -37,18 +37,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
                         <div><label>Dispatch Management Email</label><input type="email" id="d_email" placeholder="logistics@terraboost.com"></div>
+                        <div><label>Contractor Name (IC)</label><input type="text" id="ic_name_setup" placeholder="Full Legal Name"></div>
                         <div><label>Contractor Email Address</label><input type="email" id="ic_email_setup" placeholder="contractor@example.com"></div>
                     </div>
                     <div class="space-y-4">
                         <div><label>Official Work Order #</label><input type="text" id="task_num" placeholder="WO-0000"></div>
-                        <div><label>Total Kiosk Volume</label><input type="number" id="kiosks" value="0"></div>
+                        <div><label>Total Kiosk Volume</label><input type="number" id="kiosks" placeholder="Enter amount"></div>
+                        <div><label>Authorized Delivery Destination</label><input type="text" id="delivery_addr" placeholder="Full Registered Address"></div>
                     </div>
                 </div>
-                <div><label>Authorized Delivery Destination</label><input type="text" id="delivery_addr" placeholder="Full Registered Address"></div>
                 
-                <div class="flex gap-4 pt-4">
+                <div class="pt-4">
                     <button type="button" onclick="generateVerificationLink()" class="w-full brand-blue text-white font-bold py-4 rounded-xl shadow-lg text-xs uppercase tracking-widest hover:opacity-90">
-                        🚀 Copy & Dispatch Link
+                        🚀 Generate & Dispatch Verification Link
                     </button>
                 </div>
             </div>
@@ -57,17 +58,16 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     <div class="space-y-6">
                         <h3 class="text-sm font-black text-slate-800 uppercase border-b pb-2">Shipment Data Review</h3>
-                        <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm text-slate-700">
-                            </div>
-                        <div id="disclosureText" class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[11px] text-amber-800">
-                            <strong>Official Disclosure:</strong> The Independent Contractor acknowledges receipt of the shipment in good condition. All shipping pallets will remain at the delivery site. By providing a digital signature, you consent to legally binding electronic documentation.
+                        <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm text-slate-700"></div>
+                        <div id="disclosureText" class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[12px] text-amber-900 leading-relaxed font-medium">
+                            By providing your digital signature, you agree to accept the shipment at the address provided. Please note that deliveries arrive on pallets.
                         </div>
                     </div>
 
                     <div class="space-y-6">
                         <div>
-                            <label class="text-blue-600 font-black">Electronic Signature (Type Full Legal Name)</label>
-                            <input type="text" id="typed_sig" oninput="updateSigPreview()" placeholder="Enter Legal Name" class="signature-font w-full border-none focus:ring-0">
+                            <label class="text-blue-600 font-black">Electronic Signature (Type Name to Confirm)</label>
+                            <input type="text" id="typed_sig" oninput="updateSigPreview()" placeholder="Type full name here" class="signature-font w-full border-none focus:ring-0">
                         </div>
 
                         <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -77,9 +77,14 @@
                             </label>
                         </div>
 
-                        <div class="text-right">
-                            <label>Execution Date</label>
-                            <span id="dateDisplay" class="font-bold text-slate-800 text-sm"></span>
+                        <div class="text-right flex justify-between items-end border-t pt-4">
+                            <div class="text-left text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                                Form Status<br><span class="text-emerald-500 font-black">Verified Link Active</span>
+                            </div>
+                            <div>
+                                <label>Execution Date</label>
+                                <span id="dateDisplay" class="font-bold text-slate-800 text-sm"></span>
+                            </div>
                         </div>
 
                         <button type="button" id="submitBtn" onclick="submitAuthorization()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-xl shadow-lg text-xs uppercase tracking-widest hover:bg-blue-700">
@@ -110,7 +115,6 @@
             document.getElementById('sig_name_preview').innerText = val || "the signatory";
         }
 
-        // RE-RUN LOGIC WHENEVER THE PAGE LOADS OR THE URL CHANGES
         function checkMode() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('mode') === 'sign') {
@@ -118,11 +122,11 @@
                 document.getElementById('icMode').classList.remove('hidden');
                 document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 
-                // MAPPING URL DATA TO THE UI
                 document.getElementById('summaryZone').innerHTML = `
+                    <div class="flex justify-between"><strong>Contractor Name:</strong> <span class="font-bold">${params.get('icn') || 'N/A'}</span></div>
                     <div class="flex justify-between"><strong>Work Order ID:</strong> <span class="text-blue-600 font-bold">${params.get('wo') || 'N/A'}</span></div>
                     <div class="flex justify-between"><strong>Unit Quantity:</strong> <span>${params.get('k') || '0'} Kiosks</span></div>
-                    <div class="flex justify-between"><strong>Contractor Account:</strong> <span>${params.get('ice') || 'N/A'}</span></div>
+                    <div class="flex justify-between"><strong>Account Email:</strong> <span>${params.get('ice') || 'N/A'}</span></div>
                     <div class="pt-2 border-t mt-2"><strong>Authorized Location:</strong><br><span class="text-slate-600 font-medium">${params.get('addr') || 'N/A'}</span></div>
                 `;
             }
@@ -132,24 +136,24 @@
 
         function generateVerificationLink() {
             const dEmail = document.getElementById('d_email').value;
+            const icName = document.getElementById('ic_name_setup').value;
             const icEmail = document.getElementById('ic_email_setup').value;
             const wo = document.getElementById('task_num').value;
             const k = document.getElementById('kiosks').value;
             const addr = document.getElementById('delivery_addr').value;
 
-            if (!dEmail || !icEmail || !wo) return alert("Please complete Dispatch Email, IC Email, and Work Order #.");
+            if (!dEmail || !icEmail || !icName || !wo || !k) return alert("All fields, including Kiosk Count, are required to generate a valid authorization link.");
 
             const baseUrl = window.location.href.split('?')[0];
-            // ENCODE DATA INTO THE URL
-            const link = `${baseUrl}?mode=sign&wo=${encodeURIComponent(wo)}&k=${encodeURIComponent(k)}&addr=${encodeURIComponent(addr)}&de=${encodeURIComponent(dEmail)}&ice=${encodeURIComponent(icEmail)}`;
+            const link = `${baseUrl}?mode=sign&icn=${encodeURIComponent(icName)}&wo=${encodeURIComponent(wo)}&k=${encodeURIComponent(k)}&addr=${encodeURIComponent(addr)}&de=${encodeURIComponent(dEmail)}&ice=${encodeURIComponent(icEmail)}`;
             
             navigator.clipboard.writeText(link);
             
             const subject = `Official Shipment Authorization: WO#${wo}`;
-            const body = `Hi,\n\nPlease review the shipment logistics and execute the formal acknowledgment here:\n\n${link}`;
+            const body = `Hi ${icName},\n\nPlease review the shipment logistics for Work Order #${wo} and execute the formal acknowledgment here:\n\n${link}`;
             
             window.location.href = `mailto:${icEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            alert("Verification Link generated and copied to clipboard!");
+            alert("Verification Link generated for " + icName + " and copied to clipboard.");
         }
 
         async function submitAuthorization() {
@@ -172,11 +176,13 @@
             document.getElementById('audit_ua').innerText = `System Info: ${navigator.userAgent}`;
 
             const formData = new FormData();
+            formData.append('Contractor Name', params.get('icn'));
             formData.append('Work Order', params.get('wo'));
             formData.append('Kiosk Count', params.get('k'));
             formData.append('Address', params.get('addr'));
-            formData.append('Signatory', name);
+            formData.append('Digital Signature', name);
             formData.append('Verification ID', txID);
+            formData.append('Disclosure Agreed', 'Yes');
             formData.append('_replyto', params.get('de'));
 
             try {
@@ -185,8 +191,11 @@
                 });
 
                 if (response.ok) {
-                    html2pdf().set({ margin: 0.5, filename: `CERT_WO_${params.get('wo')}_${dateStr}.pdf`, jsPDF: { format: 'letter' } })
-                    .from(document.getElementById('captureArea')).save();
+                    html2pdf().set({ 
+                        margin: 0.5, 
+                        filename: `CERT_WO_${params.get('wo')}_${dateStr}.pdf`, 
+                        jsPDF: { format: 'letter' } 
+                    }).from(document.getElementById('captureArea')).save();
 
                     document.getElementById('icMode').style.display = 'none';
                     document.getElementById('successView').classList.remove('hidden');
