@@ -54,8 +54,8 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     <div class="space-y-6">
                         <h3 class="text-sm font-black text-slate-800 uppercase border-b pb-2">Shipment Data Review</h3>
-                        <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm"></div>
-                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[11px] text-amber-800">
+                        <div id="summaryZone" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 text-sm text-slate-800"></div>
+                        <div id="disclosureText" class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[11px] text-amber-800">
                             <strong>Official Disclosure:</strong> The Independent Contractor acknowledges receipt of the shipment in good condition. All shipping pallets will remain at the delivery site. By providing a digital signature, you consent to legally binding electronic documentation.
                         </div>
                     </div>
@@ -94,7 +94,7 @@
 
             <div id="successView" class="hidden text-center py-12 space-y-4">
                 <div class="text-6xl">✅</div>
-                <h2 class="text-2xl font-bold text-slate-800 uppercase text-slate-800">Authorization Recorded</h2>
+                <h2 class="text-2xl font-bold text-slate-800 uppercase">Authorization Recorded</h2>
                 <p class="text-slate-500 max-w-sm mx-auto">Dispatch has been notified via secure server. A certified PDF copy has been generated for your internal records.</p>
             </div>
         </form>
@@ -149,21 +149,28 @@
             btn.innerText = "Securing Authorization Record...";
 
             const params = new URLSearchParams(window.location.search);
-            const ts = new Date().toISOString();
+            const now = new Date();
+            const ts = now.toISOString();
+            const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
             const txID = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const disclosureText = document.getElementById('disclosureText').innerText;
 
-            // Populate Audit Trail
             document.getElementById('auditTrail').classList.remove('hidden');
             document.getElementById('audit_id').innerText = `Verification ID: ${txID}`;
             document.getElementById('audit_ts').innerText = `Certified Timestamp: ${ts}`;
             document.getElementById('audit_ua').innerText = `System Environment: ${navigator.userAgent}`;
 
             const formData = new FormData();
-            formData.append('Work Order', params.get('wo'));
+            formData.append('Work Order ID', params.get('wo'));
+            formData.append('Kiosk Count', params.get('k'));
+            formData.append('Delivery Address', params.get('addr'));
+            formData.append('Contractor Email', params.get('ice'));
             formData.append('Authorized Signatory', name);
-            formData.append('Legal Consent Status', 'Certified');
+            formData.append('Execution Date', document.getElementById('dateDisplay').innerText);
             formData.append('Verification ID', txID);
-            formData.append('Logistics Timestamp', ts);
+            formData.append('Audit Timestamp', ts);
+            formData.append('Device/UserAgent', navigator.userAgent);
+            formData.append('Legal Disclosure Agreement', disclosureText);
             formData.append('_replyto', params.get('de'));
 
             try {
@@ -176,7 +183,7 @@
                 if (response.ok) {
                     html2pdf().set({ 
                         margin: 0.5, 
-                        filename: `CERTIFIED_AUTHORIZATION_WO_${params.get('wo')}.pdf`, 
+                        filename: `CERTIFIED_AUTHORIZATION_WO-${params.get('wo')}_${dateStr}.pdf`, 
                         jsPDF: { format: 'letter' } 
                     }).from(document.getElementById('captureArea')).save();
 
@@ -184,7 +191,7 @@
                     document.getElementById('successView').classList.remove('hidden');
                 }
             } catch (error) {
-                alert("Authorization transmission error. Please verify connection.");
+                alert("Authorization transmission error.");
                 btn.disabled = false;
                 btn.innerText = "Retry Finalization";
             }
