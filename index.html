@@ -89,8 +89,20 @@
                             </div>
                         </div>
 
+                        <div class="p-5 bg-slate-100 rounded-xl border border-slate-200 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-800">⚠️</span>
+                                <label class="mb-0 text-slate-800 font-black text-[10px]">Important Delivery Note</label>
+                            </div>
+                            <p class="text-[11px] text-slate-600 leading-relaxed italic">
+                                Any order exceeding four kiosks will arrive on a pallet (or multiple pallets). 
+
+Please note that these are curbside deliveries; carriers will offload the shipment onto your property but are not permitted to move items into garages, homes, or other structures.
+                            </p>
+                        </div>
+
                         <div id="disclosureText" class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[12px] text-amber-900 leading-relaxed font-medium">
-                            By providing your digital signature, you agree to accept the shipment at the address provided (or specified alternate location). Please note that deliveries arrive on pallets.
+                            By providing your digital signature, you agree to accept the shipment at the address provided (or specified alternate location).
                         </div>
                     </div>
 
@@ -200,7 +212,8 @@
             
             navigator.clipboard.writeText(link);
             const subject = `Action Required: Shipment Authorization WO#${d.wo}`;
-            const body = `Hi ${d.icn},\n\nPlease review shipment logistics for Work Order #${d.wo} and execute acknowledgment here: ${link}`;
+            const body = `Hi ${d.icn},\n\nPlease review shipment logistics for Work Order #${d.wo} and execute acknowledgment here:
+ ${link}`;
             
             window.location.href = `mailto:${d.ice}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             alert("Verification Link Copied to Clipboard!");
@@ -222,7 +235,6 @@
             const ts = new Date().toISOString();
             const dateStr = new Date().toISOString().split('T')[0];
             
-            // Generate Initialed Transaction ID
             const initials = getInitials(finalData.icn);
             const txID = `${initials}-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${finalData.wo}`;
 
